@@ -1,43 +1,18 @@
 import { Quaternion } from 'three';
 
-import { WebXRHandJointNames, getBabylonHandMapping, getRPMHandMapping, getVRMHandMapping } from './hand-mappings.js';
-import { loadRPMAsync, loadHandsAsync } from './loaders.js';
-
+import { getHandMapping, WebXRHandJointNames } from './hand-mappings.js';
 
 let lol = false
 
 class XRHandMeshModel {
 
-	constructor( handModel, handedness, avatarType ) {
+	constructor( handModel, handedness, avatarType, handObject ) {
 
 		this.handModel = handModel;
 
 		this.bones = [];
 
-    switch ( avatarType ) {
-      case 'RPM':
-        loadRPMAsync().then(handObject => {
-          this.prepareJoints(handObject, getRPMHandMapping(handedness === 'right'))
-          this.handModel.add( handObject );
-        })
-        break
-      case 'VRM':
-        this.prepareJoints(handObject, getVRMHandMapping(handedness === 'right'))
-        this.handModel.add( handObject );
-        break
-      case 'BABYLON':
-        loadHandsAsync(handedness, '/').then(handObject => {
-          this.prepareJoints(handObject, getBabylonHandMapping(handedness))
-          this.handModel.add( handObject );
-        })
-        break
-      case 'WEBXR':
-        loadHandsAsync(handedness).then(handObject => {
-          this.prepareJoints(handObject, WebXRHandJointNames)
-          this.handModel.add( handObject );
-        })
-        break
-    }
+    this.prepareJoints(handObject, getHandMapping(handedness, avatarType))
 
 	}
 

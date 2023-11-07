@@ -1,30 +1,30 @@
 import {
 	Object3D
-} from 'three';
+} from 'three'
 
 import {
 	XRHandMeshModel
-} from './XRHandMeshModel.js';
+} from './XRHandMeshModel.js'
 
 class XRHandModel extends Object3D {
 
 	constructor( controller ) {
 
-		super();
+		super()
 
-		this.controller = controller;
-		this.motionController = null;
-		this.envMap = null;
+		this.controller = controller
+		this.motionController = null
+		this.envMap = null
 
 	}
 
 	updateMatrixWorld( force ) {
 
-		super.updateMatrixWorld( force );
+		super.updateMatrixWorld( force )
 
 		if ( this.motionController ) {
 
-			this.motionController.updateMesh();
+			this.motionController.updateMesh()
 
 		}
 
@@ -34,65 +34,52 @@ class XRHandModel extends Object3D {
 
 class XRHandModelFactory {
 
-	constructor() {
+	createHandModel( controller, type, avatarModel ) {
 
-		this.path = null;
-
-	}
-
-	setPath( path ) {
-
-		this.path = path;
-
-		return this;
-
-	}
-
-	createHandModel( controller, type ) {
-
-		const handModel = new XRHandModel( controller );
+		const handModel = new XRHandModel( controller )
 
 		controller.addEventListener( 'connected', ( event ) => {
 
-			const xrInputSource = event.data;
+			const xrInputSource = event.data
 
 			if ( xrInputSource.hand && !handModel.motionController ) {
 
-				handModel.xrInputSource = xrInputSource;
+				handModel.xrInputSource = xrInputSource
+				const handedness = xrInputSource.handedness
 
 				switch (type ) {
 					case 'RPM':
-						handModel.motionController = new XRHandMeshModel( handModel, xrInputSource.handedness, type );
-						break;
+						handModel.motionController = new XRHandMeshModel( handModel, handedness, type, avatarModel[`${handedness}HandObject`] )
+						break
 					case 'VRM':
-						handModel.motionController = new XRHandMeshModel( handModel, xrInputSource.handedness, type );
-						break;
+						handModel.motionController = new XRHandMeshModel( handModel, handedness, type, avatarModel[`${handedness}HandObject`] )
+						break
 					case 'BABYLON':
-						handModel.motionController = new XRHandMeshModel( handModel, xrInputSource.handedness, type );
-						break;
+						handModel.motionController = new XRHandMeshModel( handModel, handedness, type, avatarModel[`${handedness}HandObject`] )
+						break
 					case 'WEBXR':
-						handModel.motionController = new XRHandMeshModel( handModel, xrInputSource.handedness, type );
-						break;
+						handModel.motionController = new XRHandMeshModel( handModel, handedness, type, avatarModel[`${handedness}HandObject`] )
+						break
 				}
 			}
 
-			controller.visible = true;
+			controller.visible = true
 
-		} );
+		} )
 
 		controller.addEventListener( 'disconnected', () => {
 
-			controller.visible = false;
-			handModel.motionController = null;
-			// handModel.remove( scene );
-			// scene = null;
+			controller.visible = false
+			handModel.motionController = null
+			// handModel.remove( scene )
+			// scene = null
 
-		} );
+		} )
 
-		return handModel;
+		return handModel
 
 	}
 
 }
 
-export { XRHandModelFactory };
+export { XRHandModelFactory }

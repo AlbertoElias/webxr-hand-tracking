@@ -3,7 +3,7 @@ import './style.css'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
-import { XRHandModelFactory } from './src/XRHandModelFactory.js';
+import { XRAvatarModelFactory } from './src/XRAvatarModelFactory';
 
 const HAND_TYPES = [
   'WEBXR',
@@ -16,11 +16,6 @@ let container;
 let camera, scene, renderer;
 let hand1, hand2;
 let controller1, controller2;
-
-const handModels = {
-  left: null,
-  right: null
-};
 
 let controls;
 
@@ -80,65 +75,49 @@ async function init() {
   controller2 = renderer.xr.getController( 1 );
   scene.add( controller2 );
 
-  const handModelFactory = new XRHandModelFactory();
+  const handAvatarFactory = new XRAvatarModelFactory();
 
   // Hand 1
 
   hand1 = renderer.xr.getHand( 0 );
-  console.log(hand1)
   window.hand = hand1
   hand1.userData.currentHandModel = 0;
-  scene.add( hand1 );
+  // scene.add( hand1 );
+
+  hand2 = renderer.xr.getHand( 1 );
+  hand2.userData.currentHandModel = 0;
+  // scene.add( hand2 );
 
   
-  handModels.left = HAND_TYPES.map( (type) => {
-    const handModel = handModelFactory.createHandModel( hand1, type)
-    scene.add(handModel)
-    return handModel
+  const avatarModels = HAND_TYPES.map( (type) => {
+    const avatarModel = handAvatarFactory.createAvatarModel( hand1, hand2, type )
+    scene.add(avatarModel)
+    return avatarModel
   })
-  console.log(handModels.left)
+  console.log(avatarModels)
 
-  for ( let i = 0; i < handModels.left.length; i ++ ) {
+  for ( let i = 0; i < avatarModels.length; i ++ ) {
 
-    const model = handModels.left[ i ];
+    const model = avatarModels[ i ];
     model.visible = i === 0;
 
   }
 
-  // TODO Unify combinations to pair of hands/avatars
   hand1.addEventListener( 'pinchend', function () {
 
-    handModels.left[ this.userData.currentHandModel ].visible = false;
-    this.userData.currentHandModel = ( this.userData.currentHandModel + 1 ) % handModels.left.length;
-    handModels.left[ this.userData.currentHandModel ].visible = true;
+    avatarModels[ this.userData.currentHandModel ].visible = false;
+    this.userData.currentHandModel = ( this.userData.currentHandModel + 1 ) % avatarModels.length;
+    hand2.userData.currentHandModel = this.userData.currentHandModel
+    avatarModels[ this.userData.currentHandModel ].visible = true;
 
   } );
 
-  // Hand 2
-
-  hand2 = renderer.xr.getHand( 1 );
-  hand2.userData.currentHandModel = 0;
-  scene.add( hand2 );
-
-  handModels.right = HAND_TYPES.map( (type) => {
-    const handModel = handModelFactory.createHandModel( hand2, type)
-    scene.add(handModel)
-    return handModel
-  })
-  console.log(handModels.right)
-
-  for ( let i = 0; i < handModels.right.length; i ++ ) {
-
-    const model = handModels.right[ i ];
-    model.visible = i == 0;
-
-  }
-
   hand2.addEventListener( 'pinchend', function () {
 
-    handModels.right[ this.userData.currentHandModel ].visible = false;
-    this.userData.currentHandModel = ( this.userData.currentHandModel + 1 ) % handModels.right.length;
-    handModels.right[ this.userData.currentHandModel ].visible = true;
+    avatarModels[ this.userData.currentHandModel ].visible = false;
+    this.userData.currentHandModel = ( this.userData.currentHandModel + 1 ) % avatarModels.length;
+    hand1.userData.currentHandModel = this.userData.currentHandModel
+    avatarModels[ this.userData.currentHandModel ].visible = true;
 
   } );
 

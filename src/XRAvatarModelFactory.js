@@ -3,19 +3,40 @@ import {
 } from 'three';
 
 import {
-	XRHandMeshModel
-} from './XRHandMeshModel.js';
+	XRHandModelFactory
+} from './XRHandModelFactory.js';
+import { loadRPMAsync, loadHandsAsync } from './loaders.js';
 
-class XRHandModel extends Object3D {
+class XRAvatarModel extends Object3D {
 
-	constructor( controller ) {
+	constructor( handController1, handController2, type ) {
 
 		super();
 
-		this.controller = controller;
-		this.motionController = null;
+		this.avatarType = type
+		this.controllers = [ handController1, handController2 ];
+		this.leftHandObject = null
+		this.rightHandObject = null
 		this.envMap = null;
 
+	}
+
+	setHandObjects ( leftHandObject, rightHandObject ) {
+		this.leftHandObject = leftHandObject
+		this.rightHandObject = rightHandObject
+		this.add(leftHandObject)
+		if (leftHandObject !== rightHandObject) {
+			this.add(rightHandObject)
+		}
+	}
+
+	setHandModels ( leftHandModel, rightHandModel ) {
+		this.handModels = [ leftHandModel, rightHandModel ]
+		this.handModels.forEach( (handModel) => this.add(handModel) )
+	}
+
+	setType( type ) {
+		this.avatarType = type
 	}
 
 	updateMatrixWorld( force ) {
@@ -32,67 +53,54 @@ class XRHandModel extends Object3D {
 
 }
 
-class XRHandModelFactory {
+class XRAvatarModelFactory {
 
-	constructor() {
+	createAvatarModel( handController1, handController2, type ) {
 
-		this.path = null;
+		const avatarModel = new XRAvatarModel( handController1, handController2, type );
+		const handModelFactory = new XRHandModelFactory();
 
-	}
+		switch (type ) {
+			case 'RPM':
+				loadRPMAsync().then(object => {
+          avatarModel.setHandObjects( object, object )
+					avatarModel.setHandModels(
+						handModelFactory.createHandModel( handController1, type, avatarModel ),
+						handModelFactory.createHandModel( handController2, type, avatarModel )
+					)
+        })
+				break;
+			case 'VRM':
+				break;
+			case 'BABYLON':
+				Promise.all([
+					loadHandsAsync('left', '/'),
+					loadHandsAsync('right', '/')
+				]).then(([leftHandObject, rightHandObject]) => {
+					avatarModel.setHandObjects( leftHandObject, rightHandObject )
+					avatarModel.setHandModels(
+						handModelFactory.createHandModel( handController1, type, avatarModel ),
+						handModelFactory.createHandModel( handController2, type, avatarModel )
+					)
+				})
+				break;
+			case 'WEBXR':
+				Promise.all([
+					loadHandsAsync('left'),
+					loadHandsAsync('right')
+				]).then(([leftHandObject, rightHandObject]) => {
+					avatarModel.setHandObjects( leftHandObject, rightHandObject )
+					avatarModel.setHandModels(
+						handModelFactory.createHandModel( handController1, type, avatarModel ),
+						handModelFactory.createHandModel( handController2, type, avatarModel )
+					)
+				})
+				break;
+		}
 
-	setPath( path ) {
-
-		this.path = path;
-
-		return this;
-
-	}
-
-	createHandModel( controller, type ) {
-
-		const handModel = new XRHandModel( controller );
-
-		controller.addEventListener( 'connected', ( event ) => {
-
-			const xrInputSource = event.data;
-
-			if ( xrInputSource.hand && !handModel.motionController ) {
-
-				handModel.xrInputSource = xrInputSource;
-
-				switch (type ) {
-					case 'RPM':
-						handModel.motionController = new XRHandMeshModel( handModel, xrInputSource.handedness, type );
-						break;
-					case 'VRM':
-						handModel.motionController = new XRHandMeshModel( handModel, xrInputSource.handedness, type );
-						break;
-					case 'BABYLON':
-						handModel.motionController = new XRHandMeshModel( handModel, xrInputSource.handedness, type );
-						break;
-					case 'WEBXR':
-						handModel.motionController = new XRHandMeshModel( handModel, xrInputSource.handedness, type );
-						break;
-				}
-			}
-
-			controller.visible = true;
-
-		} );
-
-		controller.addEventListener( 'disconnected', () => {
-
-			controller.visible = false;
-			handModel.motionController = null;
-			// handModel.remove( scene );
-			// scene = null;
-
-		} );
-
-		return handModel;
+		return avatarModel;
 
 	}
-
 }
 
-export { XRHandModelFactory };
+export { XRAvatarModelFactory };
