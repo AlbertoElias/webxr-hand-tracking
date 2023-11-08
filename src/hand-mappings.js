@@ -83,7 +83,7 @@ export function getVRMHandMapping(isRight) {
     'HandPinky2',
     'HandPinky3',
     'HandPinky4'
-  ].map((joint) => `mixamorig:${isRight ? 'Right' : 'Left'}${joint}`)
+  ].map((joint) => `mixamorig${isRight ? 'Right' : 'Left'}${joint}`)
 }
 
 export function getBabylonHandMapping (handedness) {
@@ -113,7 +113,7 @@ export function getBabylonHandMapping (handedness) {
     "little_intPhalanx_",
     "little_distPhalanx_",
     "little_tip_",
-  ].map((joint) => `${joint}${handedness === "right" ? "R" : "L"}`);
+  ].map((joint) => `${joint}${handedness === "right" ? "R" : "L"}`)
 }
 
 export function getHandMapping (handedness, type) {

@@ -1,23 +1,23 @@
 import {
 	Object3D
-} from 'three';
+} from 'three'
 
 import {
 	XRHandModelFactory
-} from './XRHandModelFactory.js';
-import { loadRPMAsync, loadHandsAsync } from './loaders.js';
+} from './XRHandModelFactory.js'
+import { loadRPMAsync, loadVRMAsync, loadHandsAsync } from './loaders.js'
 
 class XRAvatarModel extends Object3D {
 
 	constructor( handController1, handController2, type ) {
 
-		super();
+		super()
 
 		this.avatarType = type
-		this.controllers = [ handController1, handController2 ];
+		this.controllers = [ handController1, handController2 ]
 		this.leftHandObject = null
 		this.rightHandObject = null
-		this.envMap = null;
+		this.envMap = null
 
 	}
 
@@ -41,11 +41,11 @@ class XRAvatarModel extends Object3D {
 
 	updateMatrixWorld( force ) {
 
-		super.updateMatrixWorld( force );
+		super.updateMatrixWorld( force )
 
 		if ( this.motionController ) {
 
-			this.motionController.updateMesh();
+			this.motionController.updateMesh()
 
 		}
 
@@ -57,8 +57,8 @@ class XRAvatarModelFactory {
 
 	createAvatarModel( handController1, handController2, type ) {
 
-		const avatarModel = new XRAvatarModel( handController1, handController2, type );
-		const handModelFactory = new XRHandModelFactory();
+		const avatarModel = new XRAvatarModel( handController1, handController2, type )
+		const handModelFactory = new XRHandModelFactory()
 
 		switch (type ) {
 			case 'RPM':
@@ -69,9 +69,16 @@ class XRAvatarModelFactory {
 						handModelFactory.createHandModel( handController2, type, avatarModel )
 					)
         })
-				break;
+				break
 			case 'VRM':
-				break;
+				loadVRMAsync().then(object => {
+					avatarModel.setHandObjects( object, object )
+					avatarModel.setHandModels(
+						handModelFactory.createHandModel( handController1, type, avatarModel ),
+						handModelFactory.createHandModel( handController2, type, avatarModel )
+					)
+				})
+				break
 			case 'BABYLON':
 				Promise.all([
 					loadHandsAsync('left', '/'),
@@ -83,7 +90,7 @@ class XRAvatarModelFactory {
 						handModelFactory.createHandModel( handController2, type, avatarModel )
 					)
 				})
-				break;
+				break
 			case 'WEBXR':
 				Promise.all([
 					loadHandsAsync('left'),
@@ -95,12 +102,12 @@ class XRAvatarModelFactory {
 						handModelFactory.createHandModel( handController2, type, avatarModel )
 					)
 				})
-				break;
+				break
 		}
 
-		return avatarModel;
+		return avatarModel
 
 	}
 }
 
-export { XRAvatarModelFactory };
+export { XRAvatarModelFactory }

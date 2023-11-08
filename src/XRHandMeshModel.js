@@ -1,6 +1,6 @@
-import { Quaternion } from 'three';
+import { Quaternion } from 'three'
 
-import { getHandMapping, WebXRHandJointNames } from './hand-mappings.js';
+import { getHandMapping, WebXRHandJointNames } from './hand-mappings.js'
 
 let lol = false
 
@@ -8,51 +8,49 @@ class XRHandMeshModel {
 
 	constructor( handModel, handedness, avatarType, handObject ) {
 
-		this.handModel = handModel;
-
-		this.bones = [];
-
+		this.handModel = handModel
+		this.bones = []
     this.prepareJoints(handObject, getHandMapping(handedness, avatarType))
 
 	}
 
   prepareJoints (handObject, joints) {
-    const mesh = handObject.getObjectByProperty( 'type', 'SkinnedMesh' );
-    mesh.frustumCulled = false;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    const mesh = handObject.getObjectByProperty( 'type', 'SkinnedMesh' )
+    mesh.frustumCulled = false
+    mesh.castShadow = true
+    mesh.receiveShadow = true
 
     joints.forEach( (jointName, index) => {
 
-      const bone = handObject.getObjectByName( jointName );
+      const bone = handObject.getObjectByName( jointName )
 
       if ( bone !== undefined ) {
 
-        bone.jointName = WebXRHandJointNames[ index ];
+        bone.jointName = WebXRHandJointNames[ index ]
 
       } else {
 
-        console.warn( `Couldn't find ${jointName} in ${handObject.name} hand mesh` );
+        console.warn( `Couldn't find ${jointName} in ${handObject.name} hand mesh` )
 
       }
 
-      this.bones.push( bone );
+      this.bones.push( bone )
 
-    } );
+    } )
   }
 
 	updateMesh() {
 
 		// XR Joints
-		const XRJoints = this.handModel.controller.joints;
+		const XRJoints = this.handModel.controller.joints
 
 		for ( let i = 0; i < this.bones.length; i ++ ) {
 
-			const bone = this.bones[ i ];
+			const bone = this.bones[ i ]
 
 			if ( bone ) {
 
-				const XRJoint = XRJoints[ bone.jointName ];
+				const XRJoint = XRJoints[ bone.jointName ]
         if (!lol && bone.jointName === 'index-finger-phalanx-distal') {
           const joint = XRJoints[ bone.jointName ]
           console.log(joint)
@@ -62,13 +60,13 @@ class XRHandMeshModel {
         }
 
 				if ( bone.visible ) {
-					const position = bone.parent.worldToLocal(XRJoint.position);
-					bone.position.copy( position );
+					const position = bone.parent.worldToLocal(XRJoint.position)
+					bone.position.copy( position )
           const boneQuaternionInverse = bone.parent.quaternion.clone().invert()
-					// bone.quaternion.multiplyQuaternions( boneQuaternionInverse, XRJoint.quaternion );
+					// bone.quaternion.multiplyQuaternions( boneQuaternionInverse, XRJoint.quaternion )
           // bone.quaternion.premultiply(XRJoint.quaternion.clone().invert())
           bone.rotation.copy(XRJoint.rotation)
-					// bone.scale.setScalar( XRJoint.jointRadius || defaultRadius );
+					// bone.scale.setScalar( XRJoint.jointRadius || defaultRadius )
 				}
 
 			}
@@ -79,4 +77,4 @@ class XRHandMeshModel {
 
 }
 
-export { XRHandMeshModel };
+export { XRHandMeshModel }
